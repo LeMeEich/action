@@ -28,7 +28,7 @@ jobs:
       - name: Deploy to DES
         run: |
           echo "🚀 Deploy to DES"
-          cat build-info.txt
+          cat deploy/build-info.txt
           cat teste.txt
           echo "Environment: DES"
 
@@ -47,7 +47,7 @@ jobs:
       - name: Deploy to PRE
         run: |
           echo "🚀 Deploy to PRE"
-          cat build-info.txt
+          cat deploy/build-info.txt
           cat teste.txt
           echo "Environment: PRE"
 
@@ -67,6 +67,6 @@ jobs:
       - name: Deploy to PROD
         run: |
           echo "🚀 Deploy to PROD"
-          cat build-info.txt
+          cat deploy/build-info.txt
           cat teste.txt
           echo "Environment: PROD"
