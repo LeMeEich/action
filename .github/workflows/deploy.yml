@@ -1,72 +1,75 @@
 name: Deploy
 
 on:
-  workflow_run:
-    workflows: ["Build"]
-    types:
-      - completed
   workflow_dispatch:
     inputs:
       version:
         description: 'Build version to deploy (e.g., v1.0.123)'
         required: true
         type: string
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        type: choice
+        options:
+          - des
+          - pre
+          - prod
 
 jobs:
   deploy-des:
     name: Deploy to DES
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'
+    if: inputs.environment == 'des'
     
     steps:
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
-          name: build-${{ github.event_name == 'workflow_dispatch' && inputs.version || format('v1.0.{0}', github.event.workflow_run.run_number) }}
+          name: build-${{ inputs.version }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy to DES
         run: |
           echo "🚀 Deploy to DES"
-          cat deploy/build-info.txt
+          cat build/info.txt
           cat teste.txt
           echo "Environment: DES"
 
   deploy-pre:
     name: Deploy to PRE
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'
+    if: inputs.environment == 'pre'
     
     steps:
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
-          name: build-${{ github.event_name == 'workflow_dispatch' && inputs.version || format('v1.0.{0}', github.event.workflow_run.run_number) }}
+          name: build-${{ inputs.version }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy to PRE
         run: |
           echo "🚀 Deploy to PRE"
-          cat deploy/build-info.txt
+          cat build/info.txt
           cat teste.txt
           echo "Environment: PRE"
 
   deploy-prod:
     name: Deploy to PROD
     runs-on: ubuntu-latest
-    needs: deploy-pre
-    if: github.event_name == 'workflow_dispatch'
+    if: inputs.environment == 'prod'
     
     steps:
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
-          name: build-${{ github.event_name == 'workflow_dispatch' && inputs.version || format('v1.0.{0}', github.event.workflow_run.run_number) }}
+          name: build-${{ inputs.version }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy to PROD
         run: |
           echo "🚀 Deploy to PROD"
-          cat deploy/build-info.txt
+          cat build/info.txt
           cat teste.txt
           echo "Environment: PROD"
