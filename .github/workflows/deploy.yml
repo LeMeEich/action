@@ -25,12 +25,6 @@ jobs:
           name: build-${{ github.event_name == 'workflow_dispatch' && inputs.version || format('v1.0.{0}', github.event.workflow_run.run_number) }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Download build artifact teste
-        uses: actions/download-artifact@v4
-        with:
-          name: teste-${{ format('v1.0.{0}', github.event.workflow_run.run_number) }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Deploy to DES
         run: |
           echo "🚀 Deploy to DES"
@@ -48,12 +42,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-${{ github.event_name == 'workflow_dispatch' && inputs.version || format('v1.0.{0}', github.event.workflow_run.run_number) }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Download build artifact teste
-        uses: actions/download-artifact@v4
-        with:
-          name: teste-${{ format('v1.0.{0}', github.event.workflow_run.run_number) }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy to PRE
@@ -74,12 +62,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-${{ github.event_name == 'workflow_dispatch' && inputs.version || format('v1.0.{0}', github.event.workflow_run.run_number) }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Download build artifact teste
-        uses: actions/download-artifact@v4
-        with:
-          name: teste-${{ format('v1.0.{0}', github.event.workflow_run.run_number) }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy to PROD
