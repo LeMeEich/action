@@ -1,0 +1,109 @@
+name: Pipeline with Reusable Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      artifact-name: ${{ steps.version.outputs.artifact-name }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build application
+        run: npm run build
+
+      - name: Generate version
+        id: version
+        run: |
+          VERSION="v1.0.${{ github.run_number }}"
+          ARTIFACT_NAME="build-$VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "artifact-name=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
+          echo "Build version: $VERSION"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.version.outputs.artifact-name }}
+          path: |
+            dist/
+            package.json
+            package-lock.json
+          retention-days: 30
+
+  deploy-des:
+    name: Deploy DES
+    needs: build
+    if: github.ref == 'refs/heads/develop'
+    uses: ./.github/workflows/reusable-deploy.yml
+    with:
+      environment: DES
+      version: ${{ needs.build.outputs.version }}
+      artifact-name: ${{ needs.build.outputs.artifact-name }}
+    secrets:
+      api-key: ${{ secrets.DES_API_KEY }}
+
+  deploy-pre:
+    name: Deploy PRE
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/reusable-deploy.yml
+    with:
+      environment: PRE
+      version: ${{ needs.build.outputs.version }}
+      artifact-name: ${{ needs.build.outputs.artifact-name }}
+    secrets:
+      api-key: ${{ secrets.PRE_API_KEY }}
+
+  deploy-prod:
+    name: Deploy PROD
+    needs: [build, deploy-pre]
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/reusable-deploy.yml
+    with:
+      environment: PROD
+      version: ${{ needs.build.outputs.version }}
+      artifact-name: ${{ needs.build.outputs.artifact-name }}
+    secrets:
+      api-key: ${{ secrets.PROD_API_KEY }}
+
+  notify:
+    name: Notify Deployment
+    needs: [build, deploy-des, deploy-pre, deploy-prod]
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Deployment notification
+        run: |
+          echo "### 📊 Deployment Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version**: ${{ needs.build.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Environment | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| DES | ${{ needs.deploy-des.result == 'success' && '✅' || needs.deploy-des.result == 'skipped' && '⏭️' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| PRE | ${{ needs.deploy-pre.result == 'success' && '✅' || needs.deploy-pre.result == 'skipped' && '⏭️' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| PROD | ${{ needs.deploy-prod.result == 'success' && '✅' || needs.deploy-prod.result == 'skipped' && '⏭️' || '❌' }} |" >> $GITHUB_STEP_SUMMARY

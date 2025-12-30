@@ -1,0 +1,65 @@
+name: Deploy Existing Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Build version to deploy (e.g., v1.0.123)'
+        required: true
+        type: string
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        type: choice
+        options:
+          - DES
+          - PRE
+          - PROD
+
+jobs:
+  deploy:
+    name: Deploy to ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ inputs.environment == 'PROD' && 'https://prod.example.com' || inputs.environment == 'PRE' && 'https://pre.example.com' || 'https://des.example.com' }}
+    
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-${{ inputs.version }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy to ${{ inputs.environment }}
+        run: |
+          echo "Deploying version ${{ inputs.version }} to ${{ inputs.environment }} environment"
+          
+          # Configurar variáveis baseadas no ambiente
+          if [ "${{ inputs.environment }}" == "DES" ]; then
+            URL="${{ vars.DES_URL }}"
+            API_KEY="${{ secrets.DES_API_KEY }}"
+          elif [ "${{ inputs.environment }}" == "PRE" ]; then
+            URL="${{ vars.PRE_URL }}"
+            API_KEY="${{ secrets.PRE_API_KEY }}"
+          else
+            URL="${{ vars.PROD_URL }}"
+            API_KEY="${{ secrets.PROD_API_KEY }}"
+          fi
+          
+          echo "Deploying to: $URL"
+          # Adicione aqui seus comandos de deploy
+
+      - name: Verify deployment
+        run: |
+          echo "Verifying ${{ inputs.environment }} deployment..."
+          # curl -f https://${{ inputs.environment }}.example.com/health || exit 1
+
+      - name: Notify deployment
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Deployment to ${{ inputs.environment }} succeeded!"
+          else
+            echo "❌ Deployment to ${{ inputs.environment }} failed!"
+          fi

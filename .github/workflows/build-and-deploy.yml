@@ -1,0 +1,154 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        type: choice
+        options:
+          - DES
+          - PRE
+          - PROD
+
+jobs:
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build application
+        run: npm run build
+
+      - name: Generate version
+        id: version
+        run: |
+          VERSION="v1.0.${{ github.run_number }}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Build version: $VERSION"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ steps.version.outputs.version }}
+          path: |
+            dist/
+            package.json
+            package-lock.json
+          retention-days: 30
+
+  deploy-des:
+    name: Deploy to DES
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: DES
+      url: https://des.example.com
+    if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-${{ needs.build.outputs.version }}
+
+      - name: Deploy to DES
+        run: |
+          echo "Deploying version ${{ needs.build.outputs.version }} to DES environment"
+          echo "DES_URL: ${{ vars.DES_URL }}"
+          echo "API_KEY: ${{ secrets.DES_API_KEY }}"
+          # Adicione aqui seus comandos de deploy
+          # Exemplos:
+          # - scp, rsync para servidores
+          # - kubectl apply para Kubernetes
+          # - aws s3 sync para S3
+          # - terraform apply
+          
+      - name: Verify deployment
+        run: |
+          echo "Verifying DES deployment..."
+          # curl -f ${{ vars.DES_URL }}/health || exit 1
+
+  deploy-pre:
+    name: Deploy to PRE
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: PRE
+      url: https://pre.example.com
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-${{ needs.build.outputs.version }}
+
+      - name: Deploy to PRE
+        run: |
+          echo "Deploying version ${{ needs.build.outputs.version }} to PRE environment"
+          echo "PRE_URL: ${{ vars.PRE_URL }}"
+          echo "API_KEY: ${{ secrets.PRE_API_KEY }}"
+          # Adicione aqui seus comandos de deploy
+
+      - name: Verify deployment
+        run: |
+          echo "Verifying PRE deployment..."
+          # curl -f ${{ vars.PRE_URL }}/health || exit 1
+
+  deploy-prod:
+    name: Deploy to PROD
+    needs: [build, deploy-pre]
+    runs-on: ubuntu-latest
+    environment:
+      name: PROD
+      url: https://prod.example.com
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-${{ needs.build.outputs.version }}
+
+      - name: Deploy to PROD
+        run: |
+          echo "Deploying version ${{ needs.build.outputs.version }} to PROD environment"
+          echo "PROD_URL: ${{ vars.PROD_URL }}"
+          echo "API_KEY: ${{ secrets.PROD_API_KEY }}"
+          # Adicione aqui seus comandos de deploy
+
+      - name: Verify deployment
+        run: |
+          echo "Verifying PROD deployment..."
+          # curl -f ${{ vars.PROD_URL }}/health || exit 1
+
+      - name: Create release tag
+        if: success()
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git tag -a ${{ needs.build.outputs.version }} -m "Release ${{ needs.build.outputs.version }}"
+          git push origin ${{ needs.build.outputs.version }}

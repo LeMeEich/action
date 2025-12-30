@@ -1,0 +1,17 @@
+{
+  "name": "github-actions-example",
+  "version": "1.0.0",
+  "description": "Exemplo de GitHub Actions com build e deploy separados",
+  "scripts": {
+    "build": "echo 'Building application...' && mkdir -p dist && echo 'Build complete!' > dist/index.html",
+    "test": "echo 'Running tests...' && echo 'All tests passed!'",
+    "start": "echo 'Starting application...'"
+  },
+  "keywords": [
+    "github-actions",
+    "ci-cd",
+    "deploy"
+  ],
+  "author": "",
+  "license": "MIT"
+}
