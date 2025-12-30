@@ -30,20 +30,13 @@ jobs:
 
       - name: Create build artifact
         run: |
-          mkdir -p build
-          echo "Gerado o build ${{ steps.version.outputs.version }} para o ambiente" > build/build-info.txt
-          echo "Build timestamp: $(date)" >> build/build-info.txt
-          echo "Git commit: ${{ github.sha }}" >> build/build-info.txt
-          echo "Git branch: ${{ github.ref_name }}" >> build/build-info.txt
-          echo "" >> build/build-info.txt
-          echo "📦 Artifact created successfully!"
-          cat build/build-info.txt
+          echo 'Gerando o build: ${{ steps.version.outputs.version }}' >> build/info.txt
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.version.outputs.artifact-name }}
-          path: build/
+          path: build/info.txt
           retention-days: 30
 
       - name: Build summary
