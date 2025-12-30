@@ -1,16 +1,17 @@
 {
   "name": "github-actions-example",
   "version": "1.0.0",
-  "description": "Exemplo de GitHub Actions com build e deploy separados",
+  "description": "Exemplo de GitHub Actions com build e deploy separados em workflows diferentes",
   "scripts": {
-    "build": "echo 'Building application...' && mkdir -p dist && echo 'Build complete!' > dist/index.html",
+    "build": "echo 'Building application...' && mkdir -p build && echo 'Build complete!'",
     "test": "echo 'Running tests...' && echo 'All tests passed!'",
     "start": "echo 'Starting application...'"
   },
   "keywords": [
     "github-actions",
     "ci-cd",
-    "deploy"
+    "deploy",
+    "multi-environment"
   ],
   "author": "",
   "license": "MIT"

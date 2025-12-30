@@ -83,7 +83,7 @@ Vá em **Settings > Environments** e crie:
 - **Secrets**:
   - `PRE_API_KEY`: Chave de API para PRE
 - **Protection Rules**:
-  - ✅ Required reviewers: 1 pessoa
+  - ✅ Required reviewers: 1 pessoa (opcional)
 
 #### Environment: PROD
 - **Variables**:
@@ -91,11 +91,24 @@ Vá em **Settings > Environments** e crie:
 - **Secrets**:
   - `PROD_API_KEY`: Chave de API para PROD
 - **Protection Rules**:
-  - ✅ Required reviewers: 2 pessoas
-  - ✅ Wait timer: 5 minutos
+  - ✅ Required reviewers: 2 pessoas (recomendado)
+  - ✅ Wait timer: 5 minutos (opcional)
 
-### 2. Estrutura do Projeto
-Certifique-se de ter os seguintes arquivos/scripts:
+### 3. Exemplo do Build e Deploy
+
+O exemplo atual é bem simples:
+
+**Build (build.yml):**
+- Gera um arquivo `build-info.txt` com informações do build
+- Conteúdo: "Gerado o build v1.0.X para o ambiente"
+
+**Deploy (deploy.yml):**
+- Faz download do artifact
+- Imprime o conteúdo do arquivo `build-info.txt`
+- Imprime o nome do ambiente (DES, PRE ou PROD)
+
+### 4. Estrutura do Projeto (Opcional)
+Para projetos reais, adicione os scripts necessários:
 
 ```json
 ### Workflow Separado (build.yml + deploy.yml)
