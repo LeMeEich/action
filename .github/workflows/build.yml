@@ -70,7 +70,7 @@ jobs:
           echo "Version: ${{ needs.build.outputs.version }}"
           cat build/info.txt
           cat teste.txt
-          echo "✅ Deploy to DES completed!"
+          echo "\n✅ Deploy to DES completed!"
 
   deploy-pre:
     name: Deploy to PRE
@@ -90,7 +90,7 @@ jobs:
           echo "Version: ${{ needs.build.outputs.version }}"
           cat build/info.txt
           cat teste.txt
-          echo "✅ Deploy to PRE completed!"
+          echo "\n✅ Deploy to DES completed!"
 
   deploy-prod:
     name: Deploy to PROD
@@ -110,4 +110,4 @@ jobs:
           echo "Version: ${{ needs.build.outputs.version }}"
           cat build/info.txt
           cat teste.txt
-          echo "✅ Deploy to PROD completed!"
+          echo "\n✅ Deploy to DES completed!"
