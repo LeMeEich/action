@@ -1,0 +1,285 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: ["Build"]
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Build version to deploy (e.g., v1.0.123)'
+        required: true
+        type: string
+      environment:
+        description: 'Environment to deploy (leave empty for all)'
+        required: false
+        type: choice
+        options:
+          - ''
+          - DES
+          - PRE
+          - PROD
+
+jobs:
+  # Job para descobrir o artifact quando triggado automaticamente
+  get-artifact:
+    name: Get Build Artifact
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_run'
+    outputs:
+      version: ${{ steps.get-version.outputs.version }}
+      artifact-name: ${{ steps.get-version.outputs.artifact-name }}
+      should-deploy-des: ${{ steps.check-branch.outputs.deploy-des }}
+      should-deploy-pre: ${{ steps.check-branch.outputs.deploy-pre }}
+      should-deploy-prod: ${{ steps.check-branch.outputs.deploy-prod }}
+    
+    steps:
+      - name: Check if build succeeded
+        if: github.event.workflow_run.conclusion != 'success'
+        run: |
+          echo "❌ Build workflow failed. Skipping deployment."
+          exit 1
+
+      - name: Get build version from artifacts
+        id: get-version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Pega o run number do workflow de build
+          RUN_NUMBER=${{ github.event.workflow_run.run_number }}
+          VERSION="v1.0.$RUN_NUMBER"
+          ARTIFACT_NAME="build-$VERSION"
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "artifact-name=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
+          echo "📦 Found artifact: $ARTIFACT_NAME"
+
+      - name: Check branch for deployment
+        id: check-branch
+        run: |
+          BRANCH="${{ github.event.workflow_run.head_branch }}"
+          echo "Branch: $BRANCH"
+          
+          if [ "$BRANCH" == "develop" ]; then
+            echo "deploy-des=true" >> $GITHUB_OUTPUT
+            echo "deploy-pre=false" >> $GITHUB_OUTPUT
+            echo "deploy-prod=false" >> $GITHUB_OUTPUT
+            echo "✅ Will deploy to DES"
+          elif [ "$BRANCH" == "main" ]; then
+            echo "deploy-des=false" >> $GITHUB_OUTPUT
+            echo "deploy-pre=true" >> $GITHUB_OUTPUT
+            echo "deploy-prod=true" >> $GITHUB_OUTPUT
+            echo "✅ Will deploy to PRE and PROD"
+          else
+            echo "deploy-des=false" >> $GITHUB_OUTPUT
+            echo "deploy-pre=false" >> $GITHUB_OUTPUT
+            echo "deploy-prod=false" >> $GITHUB_OUTPUT
+            echo "⏭️ No deployment for this branch"
+          fi
+
+  deploy-des:
+    name: Deploy to DES
+    runs-on: ubuntu-latest
+    needs: [get-artifact]
+    if: |
+      always() &&
+      (github.event_name == 'workflow_dispatch' && (inputs.environment == '' || inputs.environment == 'DES')) ||
+      (github.event_name == 'workflow_run' && needs.get-artifact.outputs.should-deploy-des == 'true')
+    environment:
+      name: DES
+      url: https://des.example.com
+    
+    steps:
+      - name: Set version
+        id: set-version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION="${{ needs.get-artifact.outputs.version }}"
+          fi
+          ARTIFACT_NAME="build-$VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "artifact-name=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.set-version.outputs.artifact-name }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy to DES
+        run: |
+          echo "================================================"
+          echo "🚀 DEPLOYING TO DES ENVIRONMENT"
+          echo "================================================"
+          echo ""
+          echo "📋 Build Information:"
+          cat build-info.txt
+          echo ""
+          echo "================================================"
+          echo "🌍 Environment: DES"
+          echo "📦 Version: ${{ steps.set-version.outputs.version }}"
+          echo "🔗 URL: https://des.example.com"
+          echo "================================================"
+          echo ""
+          echo "✅ Deploy to DES completed successfully!"
+
+  deploy-pre:
+    name: Deploy to PRE
+    runs-on: ubuntu-latest
+    needs: [get-artifact]
+    if: |
+      always() &&
+      (github.event_name == 'workflow_dispatch' && (inputs.environment == '' || inputs.environment == 'PRE')) ||
+      (github.event_name == 'workflow_run' && needs.get-artifact.outputs.should-deploy-pre == 'true')
+    environment:
+      name: PRE
+      url: https://pre.example.com
+    
+    steps:
+      - name: Set version
+        id: set-version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION="${{ needs.get-artifact.outputs.version }}"
+          fi
+          ARTIFACT_NAME="build-$VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "artifact-name=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.set-version.outputs.artifact-name }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy to PRE
+        run: |
+          echo "================================================"
+          echo "🚀 DEPLOYING TO PRE ENVIRONMENT"
+          echo "================================================"
+          echo ""
+          echo "📋 Build Information:"
+          cat build-info.txt
+          echo ""
+          echo "================================================"
+          echo "🌍 Environment: PRE"
+          echo "📦 Version: ${{ steps.set-version.outputs.version }}"
+          echo "🔗 URL: https://pre.example.com"
+          echo "================================================"
+          echo ""
+          echo "✅ Deploy to PRE completed successfully!"
+
+  deploy-prod:
+    name: Deploy to PROD
+    runs-on: ubuntu-latest
+    needs: [get-artifact, deploy-pre]
+    if: |
+      always() &&
+      (github.event_name == 'workflow_dispatch' && (inputs.environment == '' || inputs.environment == 'PROD')) ||
+      (github.event_name == 'workflow_run' && needs.get-artifact.outputs.should-deploy-prod == 'true' && needs.deploy-pre.result == 'success')
+    environment:
+      name: PROD
+      url: https://prod.example.com
+    
+    steps:
+      - name: Set version
+        id: set-version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION="${{ needs.get-artifact.outputs.version }}"
+          fi
+          ARTIFACT_NAME="build-$VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "artifact-name=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.set-version.outputs.artifact-name }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy to PROD
+        run: |
+          echo "================================================"
+          echo "🚀 DEPLOYING TO PROD ENVIRONMENT"
+          echo "================================================"
+          echo ""
+          echo "📋 Build Information:"
+          cat build-info.txt
+          echo ""
+          echo "================================================"
+          echo "🌍 Environment: PROD"
+          echo "📦 Version: ${{ steps.set-version.outputs.version }}"
+          echo "🔗 URL: https://prod.example.com"
+          echo "================================================"
+          echo ""
+          echo "✅ Deploy to PROD completed successfully!"
+
+      - name: Create release tag
+        if: success()
+        run: |
+          echo "🏷️ Creating release tag ${{ steps.set-version.outputs.version }}"
+          # git config user.name "GitHub Actions"
+          # git config user.email "actions@github.com"
+          # git tag -a ${{ steps.set-version.outputs.version }} -m "Release ${{ steps.set-version.outputs.version }}"
+          # git push origin ${{ steps.set-version.outputs.version }}
+
+  deployment-summary:
+    name: Deployment Summary
+    needs: [deploy-des, deploy-pre, deploy-prod]
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Create summary
+        run: |
+          echo "### 📊 Deployment Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "**Trigger**: Manual deployment" >> $GITHUB_STEP_SUMMARY
+            echo "**Version**: ${{ inputs.version }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "**Trigger**: Automatic deployment" >> $GITHUB_STEP_SUMMARY
+            echo "**Branch**: ${{ github.event.workflow_run.head_branch }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Environment | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------------|--------|" >> $GITHUB_STEP_SUMMARY
+          
+          DES_STATUS="${{ needs.deploy-des.result }}"
+          PRE_STATUS="${{ needs.deploy-pre.result }}"
+          PROD_STATUS="${{ needs.deploy-prod.result }}"
+          
+          case "$DES_STATUS" in
+            success) DES_ICON="✅ Success" ;;
+            skipped) DES_ICON="⏭️ Skipped" ;;
+            failure) DES_ICON="❌ Failed" ;;
+            *) DES_ICON="⚪ Not run" ;;
+          esac
+          
+          case "$PRE_STATUS" in
+            success) PRE_ICON="✅ Success" ;;
+            skipped) PRE_ICON="⏭️ Skipped" ;;
+            failure) PRE_ICON="❌ Failed" ;;
+            *) PRE_ICON="⚪ Not run" ;;
+          esac
+          
+          case "$PROD_STATUS" in
+            success) PROD_ICON="✅ Success" ;;
+            skipped) PROD_ICON="⏭️ Skipped" ;;
+            failure) PROD_ICON="❌ Failed" ;;
+            *) PROD_ICON="⚪ Not run" ;;
+          esac
+          
+          echo "| DES | $DES_ICON |" >> $GITHUB_STEP_SUMMARY
+          echo "| PRE | $PRE_ICON |" >> $GITHUB_STEP_SUMMARY
+          echo "| PROD | $PROD_ICON |" >> $GITHUB_STEP_SUMMARY

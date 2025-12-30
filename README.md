@@ -1,45 +1,74 @@
 # GitHub Actions - Build e Deploy Multi-Ambiente
 
-Este repositório contém exemplos de GitHub Actions para build e deploy separados em múltiplos ambientes.
+Este repositório contém exemplos de GitHub Actions para build e deploy **totalmente separados** em múltiplos ambientes.
 
 ## 📋 Estrutura dos Workflows
 
-### 1. `build-and-deploy.yml`
-Workflow principal que executa build e deploy automaticamente baseado na branch:
+### 1. `build.yml` - Workflow de Build
+Workflow responsável **apenas** por gerar o build:
 
-- **Build**: Cria o artefato uma única vez
-- **Deploy DES**: Quando push em `develop`
-- **Deploy PRE**: Quando push em `main`
-- **Deploy PROD**: Após deploy em PRE (com aprovação manual)
+- Cria um arquivo `build-info.txt` com informações do build
+- Gera versionamento automático (v1.0.X)
+- Faz upload do artifact para uso posterior
+- Triggado automaticamente em push para `main` ou `develop`
+- Pode ser executado manualmente
 
-### 2. `deploy-existing-build.yml`
-Workflow manual para fazer deploy de um build existente em qualquer ambiente:
+### 2. `deploy.yml` - Workflow de Deploy
+Workflow responsável **apenas** por fazer deploy:
 
-- Permite selecionar a versão do build
-- Permite escolher o ambiente (DES, PRE ou PROD)
-- Reutiliza artefatos já gerados
+- **Modo Automático**: Triggado quando o workflow de Build completa
+- **Modo Manual**: Permite escolher versão e ambiente específico
+- Faz download do artifact gerado pelo Build
+- Imprime o conteúdo do arquivo + nome do ambiente
+- **Deploy DES**: Quando build vem de `develop`
+- **Deploy PRE e PROD**: Quando build vem de `main`
+
+### 3. Outros Workflows (Exemplos Alternativos)
+- `build-and-deploy.yml` - Pipeline completo em um único workflow
+- `deploy-existing-build.yml` - Deploy manual de builds existentes
+- `pipeline-with-reusable.yml` - Pipeline usando workflow reutilizável
+- `reusable-deploy.yml` - Workflow de deploy reutilizável
 
 ## 🚀 Como Usar
 
-### Deploy Automático
+### Build + Deploy Automático
+
 ```bash
-# Deploy para DES
+# Push para develop → Build → Deploy DES
 git push origin develop
 
-# Deploy para PRE e PROD
+# Push para main → Build → Deploy PRE e PROD
 git push origin main
 ```
 
-### Deploy Manual
+O workflow de Deploy é automaticamente triggado quando o Build completa com sucesso!
+
+### Build Manual
 1. Vá para **Actions** no GitHub
-2. Selecione **Deploy Existing Build**
+2. Selecione **Build**
 3. Clique em **Run workflow**
-4. Escolha a versão e o ambiente
-5. Clique em **Run workflow**
+4. Escolha a branch
+5. O deploy será automático após o build
+
+### Deploy Manual de Build Existente
+1. Vá para **Actions** no GitHub
+2. Selecione **Deploy**
+3. Clique em **Run workflow**
+4. Informe a versão do build (ex: `v1.0.123`)
+5. Escolha o ambiente (ou deixe vazio para todos)
+6. Clique em **Run workflow**
 
 ## ⚙️ Configuração Necessária
 
-### 1. Configurar Environments no GitHub
+### 1. Configurar Permissões no GitHub
+Vá em **Settings > Actions > General** e configure:
+
+- **Workflow permissions**: "Read and write permissions"
+- ✅ Marque "Allow GitHub Actions to create and approve pull requests"
+
+Isso permite que o workflow de Deploy baixe artifacts do workflow de Build.
+
+### 2. Configurar Environments no GitHub
 Vá em **Settings > Environments** e crie:
 
 #### Environment: DES
@@ -69,16 +98,37 @@ Vá em **Settings > Environments** e crie:
 Certifique-se de ter os seguintes arquivos/scripts:
 
 ```json
-// package.json
-{
-  "scripts": {
-    "build": "seu-comando-de-build",
-    "test": "seu-comando-de-test"
-  }
-}
+### Workflow Separado (build.yml + deploy.yml)
+
+```
+Push → Build Workflow
+         ↓
+      [Artifact]
+         ↓
+      Deploy Workflow (auto-trigger)
+         ↓
+    ┌────┴────┐
+    ↓         ↓
+  DES      PRE → PROD
+(develop)   (main)
 ```
 
-## 🔄 Fluxo de Deploy
+**Branch develop:**
+1. Build gera artifact
+2. Deploy automático em DES
+
+**Branch main:**
+1. Build gera artifact
+2. Deploy automático em PRE
+3. Deploy automático em PROD (após PRE)
+Separação de Responsabilidades**: Build e Deploy em workflows diferentes
+2. ✅ **Mesmo Build**: O mesmo artefato é deployado em todos os ambientes
+3. ✅ **Rastreabilidade**: Cada build tem uma versão única
+4. ✅ **Segurança**: Aprovações manuais para ambientes críticos (configurável)
+5. ✅ **Flexibilidade**: Deploy manual de qualquer versão em qualquer ambiente
+6. ✅ **Eficiência**: Build executado apenas uma vez
+7. ✅ **Re-deploy**: Fácil fazer re-deploy de versões anteriores
+8. ✅ **Independência**: Deploy pode rodar sem precisar fazer novo build
 
 ```mermaid
 graph LR
