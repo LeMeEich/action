@@ -29,15 +29,15 @@ jobs:
 
       - name: Create build artifact
         run: |
-          echo 'Gerando o build: ${{ steps.version.outputs.version }}' >> /build/info.txt
+          echo 'Gerando o build: ${{ steps.version.outputs.version }}' >> build/info.txt
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.version.outputs.artifact-name }}
           path: |
-            /build/info.txt
-            ;teste.txt
+            build/info.txt
+            teste.txt
           retention-days: 30
 
       - name: Build summary
