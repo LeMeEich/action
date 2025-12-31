@@ -3,8 +3,8 @@ name: Deploy
 on:
   workflow_dispatch:
     inputs:
-      run_id:
-        description: 'Run ID do build (ex: 123456789)'
+      build_number:
+        description: 'Número do Build (ex: 13)'
         required: true
         type: string
       environment:
@@ -26,13 +26,14 @@ jobs:
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
+          name: build-v1.0.${{ github.event.inputs.build_number }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.inputs.run_id }}
 
       - name: Deploy to ${{ github.event.inputs.environment }}
         run: |
           echo "🚀 Deploying to ${{ github.event.inputs.environment }}"
-          echo "Build Run ID: ${{ github.event.inputs.run_id }}"
+          echo "Build Number: ${{ github.event.inputs.build_number }}"
+          echo "Artifact: build-v1.0.${{ github.event.inputs.build_number }}"
           
           # Encontra o artefato baixado
           if [ -f build/info.txt ]; then
@@ -51,6 +52,7 @@ jobs:
           echo "### 🚀 Deploy Completed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Environment**: ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Build Run ID**: ${{ github.event.inputs.run_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Number**: ${{ github.event.inputs.build_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Artifact**: build-v1.0.${{ github.event.inputs.build_number }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "✅ Deployment successful!" >> $GITHUB_STEP_SUMMARY
