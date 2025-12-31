@@ -44,9 +44,6 @@ jobs:
           echo "✅ Build #$BUILD_NUMBER encontrado"
           echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
           echo "artifact_name=build-v1.0.$BUILD_NUMBER" >> $GITHUB_OUTPUT
-          
-          # Atualiza o nome do job com o número do build
-          echo "::notice title=Deploy::Build #$BUILD_NUMBER → ${{ github.event.inputs.environment }}"
 
       - name: Download build artifact
         uses: actions/download-artifact@v4
@@ -57,19 +54,9 @@ jobs:
 
       - name: Deploy to ${{ github.event.inputs.environment }}
         run: |
-          echo "🚀 Deploying to ${{ github.event.inputs.environment }}"
-          echo "Build Number: #${{ steps.build_info.outputs.build_number }}"
-          echo "Run ID: ${{ github.event.inputs.run_id }}"
-          
-          # Encontra o artefato baixado
-          if [ -f build/info.txt ]; then
-            echo "Version info:"
-            cat build/info.txt
-          fi
-          
-          if [ -f teste.txt ]; then
-            cat teste.txt
-          fi
+          echo "Version info:"
+          cat build/info.txt
+          cat teste.txt
           
           echo "✅ Deploy to ${{ github.event.inputs.environment }} completed!"
 
@@ -83,39 +70,3 @@ jobs:
           echo "- **Artifact**: ${{ steps.build_info.outputs.artifact_name }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "✅ Deployment successful!" >> $GITHUB_STEP_SUMMARY
-
-      - name: Deployment tracking
-        run: |
-          echo "📊 Registrando deployment..."
-          
-          BUILD_NUMBER="${{ steps.build_info.outputs.build_number }}"
-          VERSION="${{ steps.build_info.outputs.artifact_name }}"
-          
-          # Cria deployment no GitHub (aparece na aba Environments)
-          DEPLOYMENT=$(curl -s -X POST \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${{ github.repository }}/deployments" \
-            -d "{
-              \"ref\": \"master\",
-              \"environment\": \"${{ github.event.inputs.environment }}\",
-              \"description\": \"Deploy Build #$BUILD_NUMBER ($VERSION) to ${{ github.event.inputs.environment }}\",
-              \"auto_merge\": false,
-              \"required_contexts\": []
-            }")
-          
-          DEPLOYMENT_ID=$(echo "$DEPLOYMENT" | jq -r '.id')
-          
-          # Marca deployment como sucesso
-          curl -s -X POST \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${{ github.repository }}/deployments/$DEPLOYMENT_ID/statuses" \
-            -d "{
-              \"state\": \"success\",
-              \"description\": \"Build #$BUILD_NUMBER deployed successfully\",
-              \"environment_url\": \"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"
-            }"
-          
-          echo "✅ Deployment registrado (ID: $DEPLOYMENT_ID)"
-          echo "📍 Veja em: https://github.com/${{ github.repository }}/deployments"

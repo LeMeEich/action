@@ -60,4 +60,3 @@ jobs:
           echo "3. Cole o Run ID: \`${{ github.run_id }}\`" >> $GITHUB_STEP_SUMMARY
           echo "4. Escolha o ambiente" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Para ver deploys deste build, consulte: [Workflow runs usando este build](../../actions?query=workflow%3ADeploy)" >> $GITHUB_STEP_SUMMARY
