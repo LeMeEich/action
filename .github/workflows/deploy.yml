@@ -75,7 +75,7 @@ jobs:
           echo "### 🚀 Deploy Completed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Environment**: ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Build Number**: #${{ steps.build_info.outputs.build_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Number**: [#${{ steps.build_info.outputs.build_number }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.event.inputs.run_id }})" >> $GITHUB_STEP_SUMMARY
           echo "- **Run ID**: ${{ github.event.inputs.run_id }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Artifact**: ${{ steps.build_info.outputs.artifact_name }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
