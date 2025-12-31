@@ -1,0 +1,9 @@
+name: App CI
+
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+  build-teste:
+    uses: LeMeEich/action/.github/workflows/build.yml@master
