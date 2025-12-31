@@ -18,7 +18,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to ${{ github.event.inputs.environment }}
+    name: Deploy Build #${{ github.event.inputs.run_id }} to ${{ github.event.inputs.environment }}
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
     
@@ -44,6 +44,9 @@ jobs:
           echo "✅ Build #$BUILD_NUMBER encontrado"
           echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
           echo "artifact_name=build-v1.0.$BUILD_NUMBER" >> $GITHUB_OUTPUT
+          
+          # Atualiza o nome do job com o número do build
+          echo "::notice title=Deploy::Build #$BUILD_NUMBER → ${{ github.event.inputs.environment }}"
 
       - name: Download build artifact
         uses: actions/download-artifact@v4
