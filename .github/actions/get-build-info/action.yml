@@ -1,0 +1,47 @@
+name: 'Get Build Info'
+description: 'Busca informações de um build pelo Run ID'
+
+inputs:
+  run_id:
+    description: 'Run ID do build'
+    required: true
+  github_token:
+    description: 'GitHub Token'
+    required: true
+
+outputs:
+  build_number:
+    description: 'Número do build'
+    value: ${{ steps.get_info.outputs.build_number }}
+  artifact_name:
+    description: 'Nome do artefato'
+    value: ${{ steps.get_info.outputs.artifact_name }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Get Build Info
+      id: get_info
+      shell: bash
+      run: |
+        echo "📦 Buscando informações do Build (Run ID: ${{ inputs.run_id }})..."
+        
+        # Busca informações do build pela API
+        BUILD_INFO=$(curl -s -H "Authorization: Bearer ${{ inputs.github_token }}" \
+          -H "Accept: application/vnd.github+json" \
+          "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ inputs.run_id }}")
+        
+        BUILD_NUMBER=$(echo "$BUILD_INFO" | jq -r '.run_number')
+        ARTIFACT_NAME=$(echo "$BUILD_INFO" | jq -r '.name')
+        
+        if [ -z "$BUILD_NUMBER" ] || [ "$BUILD_NUMBER" = "null" ]; then
+          echo "❌ Build não encontrado"
+          exit 1
+        fi
+        
+        echo "✅ Build #$BUILD_NUMBER encontrado"
+        echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+        echo "artifact_name=build-v1.0.$BUILD_NUMBER" >> $GITHUB_OUTPUT
+        
+        # Atualiza o nome do job com o número do build
+        echo "::notice title=Deploy::Build #$BUILD_NUMBER → ${{ github.event.inputs.environment }}"
