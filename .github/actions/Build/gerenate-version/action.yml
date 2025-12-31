@@ -17,7 +17,8 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - name: versao_build
+    - name: Versão do Build
+      id: versao_build
       shell: bash
       run: |
         VERSION="v1.0.${{ inputs.run_number }}"
