@@ -1,0 +1,14 @@
+{
+  "name": "central-pipelines",
+  "version": "1.0.0",
+  "description": "Repositório central de workflows e actions reutilizáveis do GitHub Actions",
+  "keywords": [
+    "github-actions",
+    "ci-cd",
+    "reusable-workflows",
+    "composite-actions",
+    "devops"
+  ],
+  "author": "",
+  "license": "MIT"
+}

@@ -1,0 +1,53 @@
+name: 'Deploy Application'
+description: 'Action composta para deploy de aplicações'
+inputs:
+  environment:
+    description: 'Ambiente de deploy'
+    required: true
+  artifact-name:
+    description: 'Nome do artifact'
+    required: true
+  version:
+    description: 'Versão a deployar'
+    required: true
+  deploy-url:
+    description: 'URL do ambiente'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Validar artifact
+      shell: bash
+      run: |
+        echo "📦 Validando artifact..."
+        if [ ! -f ./build/build-info.txt ]; then
+          echo "❌ Erro: build-info.txt não encontrado!"
+          exit 1
+        fi
+        echo "✅ Artifact validado!"
+
+    - name: Exibir build info
+      shell: bash
+      run: |
+        echo "================================================"
+        echo "📋 INFORMAÇÕES DO BUILD"
+        echo "================================================"
+        cat ./build/build-info.txt
+        echo "================================================"
+
+    - name: Deploy
+      shell: bash
+      run: |
+        echo "🚀 Deploy para ${{ inputs.environment }}"
+        echo "   Versão: ${{ inputs.version }}"
+        echo "   Artifact: ${{ inputs.artifact-name }}"
+        
+        if [ -n "${{ inputs.deploy-url }}" ]; then
+          echo "   URL: ${{ inputs.deploy-url }}"
+        fi
+        
+        # Adicione aqui sua lógica de deploy
+        
+        echo "✅ Deploy concluído!"

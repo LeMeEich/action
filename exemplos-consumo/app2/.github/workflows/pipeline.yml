@@ -1,0 +1,17 @@
+# Exemplo: App usando pipeline completo
+name: Pipeline - App2
+
+on:
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+
+jobs:
+  pipeline:
+    uses: sua-org/central-pipelines/.github/workflows/reusable-pipeline.yml@main
+    with:
+      # Deploy automático para múltiplos ambientes baseado na branch
+      environments: ${{ github.ref_name == 'main' && '["pre", "prod"]' || '["dev"]' }}
+      node-version: '20'
+      build-command: 'npm run build'
+      skip-tests: false

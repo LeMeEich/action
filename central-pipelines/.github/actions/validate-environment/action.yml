@@ -1,0 +1,27 @@
+name: 'Validate Environment'
+description: 'Valida se o ambiente é válido'
+inputs:
+  environment:
+    description: 'Ambiente a validar'
+    required: true
+  allowed-environments:
+    description: 'Lista de ambientes permitidos (separados por vírgula)'
+    required: false
+    default: 'dev,pre,prod'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Validar ambiente
+      shell: bash
+      run: |
+        ENVIRONMENT="${{ inputs.environment }}"
+        ALLOWED="${{ inputs.allowed-environments }}"
+        
+        if [[ ",$ALLOWED," == *",$ENVIRONMENT,"* ]]; then
+          echo "✅ Ambiente '$ENVIRONMENT' é válido"
+        else
+          echo "❌ Ambiente '$ENVIRONMENT' não é válido"
+          echo "Ambientes permitidos: $ALLOWED"
+          exit 1
+        fi

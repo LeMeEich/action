@@ -1,0 +1,110 @@
+name: Reusable Complete Pipeline
+
+on:
+  workflow_call:
+    inputs:
+      environments:
+        description: 'Ambientes para deploy (JSON array: ["dev", "pre", "prod"])'
+        required: false
+        type: string
+        default: '["dev"]'
+      node-version:
+        description: 'Versão do Node.js'
+        required: false
+        type: string
+        default: '18'
+      build-command:
+        description: 'Comando de build'
+        required: false
+        type: string
+        default: 'npm run build'
+      skip-tests:
+        description: 'Pular testes'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      artifact-name: ${{ steps.artifact-info.outputs.name }}
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Executar testes
+        if: ${{ !inputs.skip-tests }}
+        run: npm test
+
+      - name: Gerar versão
+        id: version
+        run: |
+          VERSION="v1.0.${{ github.run_number }}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "✅ Versão gerada: $VERSION"
+
+      - name: Executar build
+        run: ${{ inputs.build-command }}
+        env:
+          NODE_ENV: production
+
+      - name: Criar build info
+        run: |
+          mkdir -p build
+          cat > build/build-info.txt << EOF
+          Build Information
+          ==================
+          Version: ${{ steps.version.outputs.version }}
+          Branch: ${{ github.ref_name }}
+          Commit: ${{ github.sha }}
+          Build Time: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          Workflow: ${{ github.workflow }}
+          Run Number: ${{ github.run_number }}
+          EOF
+
+      - name: Definir nome do artifact
+        id: artifact-info
+        run: |
+          ARTIFACT_NAME="build-${{ steps.version.outputs.version }}"
+          echo "name=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.artifact-info.outputs.name }}
+          path: build/
+          retention-days: 30
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: ${{ fromJSON(inputs.environments) }}
+    environment: ${{ matrix.environment }}
+    
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build.outputs.artifact-name }}
+          path: ./build
+
+      - name: Deploy para ${{ matrix.environment }}
+        run: |
+          echo "🚀 Deploy para ${{ matrix.environment }}"
+          echo "   Versão: ${{ needs.build.outputs.version }}"
+          cat ./build/build-info.txt
+          echo "✅ Deploy concluído!"

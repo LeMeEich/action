@@ -1,0 +1,87 @@
+name: Reusable Deploy Workflow
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Ambiente de deploy (dev, pre, prod)'
+        required: true
+        type: string
+      artifact-name:
+        description: 'Nome do artifact a ser deployado'
+        required: true
+        type: string
+      version:
+        description: 'Versão a ser deployada'
+        required: true
+        type: string
+      deploy-url:
+        description: 'URL do ambiente'
+        required: false
+        type: string
+        default: ''
+    secrets:
+      deploy-token:
+        description: 'Token para autenticação no deploy'
+        required: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: ./build
+
+      - name: Validar artifact
+        run: |
+          echo "📦 Validando artifact..."
+          if [ ! -f ./build/build-info.txt ]; then
+            echo "❌ Erro: Arquivo build-info.txt não encontrado!"
+            exit 1
+          fi
+          echo "✅ Artifact validado com sucesso!"
+
+      - name: Exibir informações do build
+        run: |
+          echo "================================================"
+          echo "📋 INFORMAÇÕES DO BUILD"
+          echo "================================================"
+          cat ./build/build-info.txt
+          echo "================================================"
+
+      - name: Deploy para ${{ inputs.environment }}
+        run: |
+          echo "🚀 Iniciando deploy..."
+          echo "   Ambiente: ${{ inputs.environment }}"
+          echo "   Versão: ${{ inputs.version }}"
+          echo "   Artifact: ${{ inputs.artifact-name }}"
+          
+          # Aqui você pode adicionar seus comandos de deploy reais
+          # Exemplos:
+          # - Deploy para S3/Azure Blob
+          # - Deploy para Kubernetes
+          # - Deploy para servidor via SSH
+          # - Notificação para webhooks
+          
+          if [ -n "${{ inputs.deploy-url }}" ]; then
+            echo "   URL: ${{ inputs.deploy-url }}"
+          fi
+          
+          echo "✅ Deploy concluído com sucesso!"
+
+      - name: Notificação de sucesso
+        if: success()
+        run: |
+          echo "✅ Deploy para ${{ inputs.environment }} realizado com sucesso!"
+          echo "   Versão: ${{ inputs.version }}"
+
+      - name: Notificação de falha
+        if: failure()
+        run: |
+          echo "❌ Falha no deploy para ${{ inputs.environment }}"
+          echo "   Versão: ${{ inputs.version }}"

@@ -1,0 +1,37 @@
+name: 'Generate Version'
+description: 'Gera versão semântica para o build'
+inputs:
+  prefix:
+    description: 'Prefixo da versão'
+    required: false
+    default: 'v'
+  major:
+    description: 'Versão major'
+    required: false
+    default: '1'
+  minor:
+    description: 'Versão minor'
+    required: false
+    default: '0'
+outputs:
+  version:
+    description: 'Versão gerada'
+    value: ${{ steps.generate.outputs.version }}
+  tag:
+    description: 'Tag completa'
+    value: ${{ steps.generate.outputs.tag }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Gerar versão
+      id: generate
+      shell: bash
+      run: |
+        VERSION="${{ inputs.major }}.${{ inputs.minor }}.${{ github.run_number }}"
+        TAG="${{ inputs.prefix }}${VERSION}"
+        
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "tag=$TAG" >> $GITHUB_OUTPUT
+        
+        echo "✅ Versão gerada: $TAG"

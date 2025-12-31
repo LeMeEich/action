@@ -1,0 +1,11 @@
+{
+  "name": "exemplo-app4",
+  "version": "1.0.0",
+  "description": "Aplicação exemplo usando central pipelines - Com validações",
+  "scripts": {
+    "build": "echo 'Building app4...' && mkdir -p build && echo 'Build complete!' > build/app.js",
+    "test": "echo 'Running tests for app4...' && echo 'All tests passed!'"
+  },
+  "keywords": ["exemplo", "central-pipelines"],
+  "license": "MIT"
+}

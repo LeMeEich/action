@@ -1,0 +1,90 @@
+name: Reusable Build Workflow
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Ambiente (dev, pre, prod)'
+        required: false
+        type: string
+        default: 'dev'
+      node-version:
+        description: 'Versão do Node.js'
+        required: false
+        type: string
+        default: '18'
+      build-command:
+        description: 'Comando de build customizado'
+        required: false
+        type: string
+        default: 'npm run build'
+    outputs:
+      artifact-name:
+        description: "Nome do artifact gerado"
+        value: ${{ jobs.build.outputs.artifact-name }}
+      version:
+        description: "Versão gerada do build"
+        value: ${{ jobs.build.outputs.version }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      artifact-name: ${{ steps.artifact-info.outputs.name }}
+      version: ${{ steps.version.outputs.version }}
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Executar testes
+        run: npm test
+
+      - name: Gerar versão
+        id: version
+        run: |
+          VERSION="v1.0.${{ github.run_number }}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "✅ Versão gerada: $VERSION"
+
+      - name: Executar build
+        run: ${{ inputs.build-command }}
+        env:
+          NODE_ENV: production
+
+      - name: Criar build info
+        run: |
+          mkdir -p build
+          cat > build/build-info.txt << EOF
+          Build Information
+          ==================
+          Version: ${{ steps.version.outputs.version }}
+          Branch: ${{ github.ref_name }}
+          Commit: ${{ github.sha }}
+          Environment: ${{ inputs.environment }}
+          Build Time: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          Workflow: ${{ github.workflow }}
+          Run Number: ${{ github.run_number }}
+          EOF
+
+      - name: Definir nome do artifact
+        id: artifact-info
+        run: |
+          ARTIFACT_NAME="build-${{ inputs.environment }}-${{ steps.version.outputs.version }}"
+          echo "name=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.artifact-info.outputs.name }}
+          path: build/
+          retention-days: 30

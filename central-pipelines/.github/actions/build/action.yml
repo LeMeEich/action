@@ -1,0 +1,74 @@
+name: 'Build Application'
+description: 'Action composta para build de aplicações'
+inputs:
+  node-version:
+    description: 'Versão do Node.js'
+    required: false
+    default: '18'
+  build-command:
+    description: 'Comando de build'
+    required: false
+    default: 'npm run build'
+  environment:
+    description: 'Ambiente (dev, pre, prod)'
+    required: false
+    default: 'dev'
+outputs:
+  version:
+    description: 'Versão gerada'
+    value: ${{ steps.version.outputs.version }}
+  artifact-name:
+    description: 'Nome do artifact'
+    value: ${{ steps.artifact-info.outputs.name }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: 'npm'
+
+    - name: Instalar dependências
+      shell: bash
+      run: npm ci
+
+    - name: Executar testes
+      shell: bash
+      run: npm test
+
+    - name: Gerar versão
+      id: version
+      shell: bash
+      run: |
+        VERSION="v1.0.${{ github.run_number }}"
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "✅ Versão: $VERSION"
+
+    - name: Executar build
+      shell: bash
+      run: ${{ inputs.build-command }}
+      env:
+        NODE_ENV: production
+
+    - name: Criar build info
+      shell: bash
+      run: |
+        mkdir -p build
+        cat > build/build-info.txt << EOF
+        Build Information
+        ==================
+        Version: ${{ steps.version.outputs.version }}
+        Branch: ${{ github.ref_name }}
+        Commit: ${{ github.sha }}
+        Environment: ${{ inputs.environment }}
+        Build Time: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+        EOF
+
+    - name: Definir nome do artifact
+      id: artifact-info
+      shell: bash
+      run: |
+        ARTIFACT_NAME="build-${{ inputs.environment }}-${{ steps.version.outputs.version }}"
+        echo "name=$ARTIFACT_NAME" >> $GITHUB_OUTPUT

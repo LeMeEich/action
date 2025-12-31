@@ -1,0 +1,36 @@
+# Exemplo: App usando workflow reutilizável
+name: Pipeline - App1
+
+on:
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+
+jobs:
+  # Opção 1: Build e Deploy separados
+  build:
+    uses: sua-org/central-pipelines/.github/workflows/reusable-build.yml@main
+    with:
+      environment: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+      node-version: '18'
+      build-command: 'npm run build'
+
+  deploy-dev:
+    needs: build
+    if: github.ref_name == 'develop'
+    uses: sua-org/central-pipelines/.github/workflows/reusable-deploy.yml@main
+    with:
+      environment: 'dev'
+      artifact-name: ${{ needs.build.outputs.artifact-name }}
+      version: ${{ needs.build.outputs.version }}
+      deploy-url: 'https://dev.app1.example.com'
+
+  deploy-prod:
+    needs: build
+    if: github.ref_name == 'main'
+    uses: sua-org/central-pipelines/.github/workflows/reusable-deploy.yml@main
+    with:
+      environment: 'prod'
+      artifact-name: ${{ needs.build.outputs.artifact-name }}
+      version: ${{ needs.build.outputs.version }}
+      deploy-url: 'https://app1.example.com'

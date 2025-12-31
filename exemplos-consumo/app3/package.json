@@ -1,0 +1,11 @@
+{
+  "name": "exemplo-app3",
+  "version": "1.0.0",
+  "description": "Aplicação exemplo usando central pipelines - Composite Actions",
+  "scripts": {
+    "build": "echo 'Building app3...' && mkdir -p build && echo 'Build complete!' > build/app.js",
+    "test": "echo 'Running tests for app3...' && echo 'All tests passed!'"
+  },
+  "keywords": ["exemplo", "central-pipelines"],
+  "license": "MIT"
+}

@@ -1,0 +1,38 @@
+# Exemplo: App com validações customizadas
+name: Pipeline - App4
+
+on:
+  push:
+    branches: [main, develop, feature/*]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Ambiente para deploy'
+        required: true
+        type: choice
+        options:
+          - dev
+          - pre
+          - prod
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Validar ambiente
+      - name: Validar ambiente
+        uses: sua-org/central-pipelines/.github/actions/validate-environment@main
+        with:
+          environment: ${{ github.event.inputs.environment || 'dev' }}
+          allowed-environments: 'dev,pre,prod'
+
+  build-and-deploy:
+    needs: validate
+    uses: sua-org/central-pipelines/.github/workflows/reusable-pipeline.yml@main
+    with:
+      environments: ${{ format('["{0}"]', github.event.inputs.environment || 'dev') }}
+      node-version: '18'
+      build-command: 'npm run build'

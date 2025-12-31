@@ -1,0 +1,54 @@
+# Exemplo: App usando composite actions
+name: Pipeline - App3
+
+on:
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.build.outputs.version }}
+      artifact-name: ${{ steps.build.outputs.artifact-name }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Usar a action de build do repositório central
+      - name: Build
+        id: build
+        uses: sua-org/central-pipelines/.github/actions/build@main
+        with:
+          node-version: '18'
+          build-command: 'npm run build'
+          environment: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.build.outputs.artifact-name }}
+          path: build/
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+    
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build.outputs.artifact-name }}
+          path: ./build
+
+      # Usar a action de deploy do repositório central
+      - name: Deploy
+        uses: sua-org/central-pipelines/.github/actions/deploy@main
+        with:
+          environment: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+          artifact-name: ${{ needs.build.outputs.artifact-name }}
+          version: ${{ needs.build.outputs.version }}
+          deploy-url: ${{ github.ref_name == 'main' && 'https://app3.example.com' || 'https://dev.app3.example.com' }}
