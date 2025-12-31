@@ -28,7 +28,7 @@ jobs:
           echo "✅ Build version: $VERSION"
 
       - name: Build Application
-        uses: ./.github/actions/Build
+        uses: ./.github/actions/Build/script
         with:
           version: ${{ steps.version.outputs.version }}
 

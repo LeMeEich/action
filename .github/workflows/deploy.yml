@@ -27,11 +27,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Validate Branch
-        uses: ./.github/actions/validate-branch
+        uses: ./.github/actions/Deploy/validate-branch
 
       - name: Get Build Information
         id: build_info
-        uses: ./.github/actions/get-build-info
+        uses: ./.github/actions/Deploy/get-build-info
         with:
           run_id: ${{ github.event.inputs.run_id }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -43,16 +43,13 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.inputs.run_id }}
 
-      - name: Deploy to ${{ github.event.inputs.environment }}
-        run: |
-          echo "Version info:"
-          cat build/info.txt
-          cat teste.txt
-          
-          echo "✅ Deploy to ${{ github.event.inputs.environment }} completed!"
+      - name: Deploy Application
+        uses: ./.github/actions/Deploy/script
+        with:
+          environment: ${{ github.event.inputs.environment }}
 
       - name: Create Deployment Record
-        uses: ./.github/actions/create-deployment-record
+        uses: ./.github/actions/Deploy/create-deployment-record
         with:
           environment: ${{ github.event.inputs.environment }}
           build_number: ${{ steps.build_info.outputs.build_number }}
