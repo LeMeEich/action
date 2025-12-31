@@ -1,0 +1,16 @@
+name: 'Build'
+description: 'Realiza o Build da aplicação'
+
+inputs:
+  version:
+    description: 'Versão do build'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Build
+      shell: bash
+      run: |
+        mkdir -p build
+        echo 'Gerando o build: ${{ inputs.version }}' >> build/info.txt

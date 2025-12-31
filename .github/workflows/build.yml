@@ -27,10 +27,10 @@ jobs:
           echo "artifact-name=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
           echo "✅ Build version: $VERSION"
 
-      - name: Create build artifact
-        run: |
-          mkdir -p build
-          echo 'Gerando o build: ${{ steps.version.outputs.version }}' >> build/info.txt
+      - name: Build Application
+        uses: ./.github/actions/Build
+        with:
+          version: ${{ steps.version.outputs.version }}
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
