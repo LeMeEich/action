@@ -1,0 +1,17 @@
+
+# .github/workflows/app-ci.yml
+name: App CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+jobs:
+  ci:
+    uses: org/.github/.github/workflows/build-and-test.yml@main
+    with:
+      language: 'node'
+      run_tests: true
+    secrets:
+      PAT_TOKEN: ${{ secrets.PAT_TOKEN }}

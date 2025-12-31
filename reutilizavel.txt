@@ -1,0 +1,64 @@
+
+# .github/workflows/build-and-test.yml
+name: Build and Test (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      language:
+        description: Linguagem (node|java|python)
+        required: true
+        type: string
+      run_tests:
+        description: Executa testes?
+        required: false
+        default: true
+        type: boolean
+    secrets:
+      PAT_TOKEN:
+        description: Token para acesso privado (se necessário)
+        required: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        if: ${{ inputs.language == 'node' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install deps (Node)
+        if: ${{ inputs.language == 'node' }}
+        run: npm ci
+
+      - name: Test (Node)
+        if: ${{ inputs.language == 'node' && inputs.run_tests }}
+        run: npm test -- --ci
+
+      - name: Setup Java
+        if: ${{ inputs.language == 'java' }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Build/Test (Java)
+        if: ${{ inputs.language == 'java' }}
+        run: ./mvnw -B clean verify
+
+      - name: Setup Python
+        if: ${{ inputs.language == 'python' }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Build/Test (Python)
+        if: ${{ inputs.language == 'python' }}
+        run: |
+          pip install -r requirements.txt
+          pytest -q
