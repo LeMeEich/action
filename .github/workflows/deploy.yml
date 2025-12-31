@@ -80,3 +80,16 @@ jobs:
           echo "- **Artifact**: ${{ steps.build_info.outputs.artifact_name }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "✅ Deployment successful!" >> $GITHUB_STEP_SUMMARY
+
+      - name: Deployment tracking
+        run: |
+          echo "📊 Deployment Tracking Info"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "Build: #${{ steps.build_info.outputs.build_number }}"
+          echo "Build URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.event.inputs.run_id }}"
+          echo "Deploy: #${{ github.run_number }}"
+          echo "Deploy URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Timestamp: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ Deploy rastreado com sucesso"

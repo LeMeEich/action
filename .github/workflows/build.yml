@@ -49,5 +49,15 @@ jobs:
           echo "- **Artifact**: ${{ steps.version.outputs.artifact-name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Run ID**: \`${{ github.run_id }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "🚀 Para fazer deploy, acesse Actions → Deploy e escolha este build!" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🚀 Deploy este Build" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. Acesse [Actions → Deploy](../../actions/workflows/deploy.yml)" >> $GITHUB_STEP_SUMMARY
+          echo "2. Clique em **Run workflow**" >> $GITHUB_STEP_SUMMARY
+          echo "3. Cole o Run ID: \`${{ github.run_id }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "4. Escolha o ambiente" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Para ver deploys deste build, consulte: [Workflow runs usando este build](../../actions?query=workflow%3ADeploy)" >> $GITHUB_STEP_SUMMARY
