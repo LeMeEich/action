@@ -48,14 +48,6 @@ jobs:
         with:
           environment: ${{ github.event.inputs.environment }}
 
-      - name: Create Deployment Record
-        uses: ./.github/actions/Deploy/create-deployment-record
-        with:
-          environment: ${{ github.event.inputs.environment }}
-          build_number: ${{ steps.build_info.outputs.build_number }}
-          artifact_name: ${{ steps.build_info.outputs.artifact_name }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Deployment summary
         run: |
           echo "### 🚀 Deploy Completed" >> $GITHUB_STEP_SUMMARY
