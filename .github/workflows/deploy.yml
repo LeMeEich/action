@@ -2,6 +2,8 @@ name: Deploy
 
 on:
   workflow_dispatch:
+    branches:
+      - master
     inputs:
       run_id:
         description: 'Run ID do build'
