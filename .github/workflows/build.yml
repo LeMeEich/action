@@ -20,12 +20,9 @@ jobs:
 
       - name: Generate version
         id: version
-        run: |
-          VERSION="v1.0.${{ github.run_number }}"
-          ARTIFACT_NAME="build-$VERSION"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "artifact-name=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
-          echo "✅ Build version: $VERSION"
+        uses: ./.github/actions/Build/gerenate-version
+        with:
+          run_number: ${{ github.run_number }}
 
       - name: Build Application
         uses: ./.github/actions/Build/script
