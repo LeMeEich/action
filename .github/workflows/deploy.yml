@@ -2,8 +2,6 @@ name: Deploy
 
 on:
   workflow_dispatch:
-    branches:
-      - master
     inputs:
       run_id:
         description: 'Run ID do build'
@@ -25,6 +23,15 @@ jobs:
     environment: ${{ github.event.inputs.environment }}
     
     steps:
+      - name: Validate branch
+        run: |
+          if [ "${{ github.ref_name }}" != "master" ]; then
+            echo "❌ Deploy só pode ser executado na branch master"
+            echo "Branch atual: ${{ github.ref_name }}"
+            exit 1
+          fi
+          echo "✅ Branch validada: master"
+      
       - name: Get Build Info
         id: build_info
         run: |
