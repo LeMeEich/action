@@ -86,13 +86,36 @@ jobs:
 
       - name: Deployment tracking
         run: |
-          echo "📊 Deployment Tracking Info"
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "Build: #${{ steps.build_info.outputs.build_number }}"
-          echo "Build URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.event.inputs.run_id }}"
-          echo "Deploy: #${{ github.run_number }}"
-          echo "Deploy URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          echo "Environment: ${{ github.event.inputs.environment }}"
-          echo "Timestamp: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "✅ Deploy rastreado com sucesso"
+          echo "📊 Registrando deployment..."
+          
+          BUILD_NUMBER="${{ steps.build_info.outputs.build_number }}"
+          VERSION="${{ steps.build_info.outputs.artifact_name }}"
+          
+          # Cria deployment no GitHub (aparece na aba Environments)
+          DEPLOYMENT=$(curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/deployments" \
+            -d "{
+              \"ref\": \"master\",
+              \"environment\": \"${{ github.event.inputs.environment }}\",
+              \"description\": \"Deploy Build #$BUILD_NUMBER ($VERSION) to ${{ github.event.inputs.environment }}\",
+              \"auto_merge\": false,
+              \"required_contexts\": []
+            }")
+          
+          DEPLOYMENT_ID=$(echo "$DEPLOYMENT" | jq -r '.id')
+          
+          # Marca deployment como sucesso
+          curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/deployments/$DEPLOYMENT_ID/statuses" \
+            -d "{
+              \"state\": \"success\",
+              \"description\": \"Build #$BUILD_NUMBER deployed successfully\",
+              \"environment_url\": \"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"
+            }"
+          
+          echo "✅ Deployment registrado (ID: $DEPLOYMENT_ID)"
+          echo "📍 Veja em: https://github.com/${{ github.repository }}/deployments"
