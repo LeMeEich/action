@@ -1,0 +1,55 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Run ID do build (ex: 123456789)'
+        required: true
+        type: string
+      environment:
+        description: 'Ambiente para deploy'
+        required: true
+        type: choice
+        options:
+          - des
+          - pre
+          - prod
+
+jobs:
+  deploy:
+    name: Deploy to ${{ github.event.inputs.environment }}
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.inputs.run_id }}
+
+      - name: Deploy to ${{ github.event.inputs.environment }}
+        run: |
+          echo "🚀 Deploying to ${{ github.event.inputs.environment }}"
+          echo "Build Run ID: ${{ github.event.inputs.run_id }}"
+          
+          # Encontra o artefato baixado
+          if [ -f build/info.txt ]; then
+            echo "Version info:"
+            cat build/info.txt
+          fi
+          
+          if [ -f teste.txt ]; then
+            cat teste.txt
+          fi
+          
+          echo "✅ Deploy to ${{ github.event.inputs.environment }} completed!"
+
+      - name: Deployment summary
+        run: |
+          echo "### 🚀 Deploy Completed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Run ID**: ${{ github.event.inputs.run_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Deployment successful!" >> $GITHUB_STEP_SUMMARY
