@@ -34,7 +34,6 @@ jobs:
             "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.event.inputs.run_id }}")
           
           BUILD_NUMBER=$(echo "$BUILD_INFO" | jq -r '.run_number')
-          ARTIFACT_NAME=$(echo "$BUILD_INFO" | jq -r '.name')
           
           if [ -z "$BUILD_NUMBER" ] || [ "$BUILD_NUMBER" = "null" ]; then
             echo "❌ Build não encontrado"
