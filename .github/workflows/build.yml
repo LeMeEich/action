@@ -5,6 +5,16 @@ on:
     branches:
       - master
   workflow_dispatch:
+    inputs:
+      deploy_to:
+        description: 'Ambiente para deploy (deixe vazio para apenas build)'
+        required: false
+        type: choice
+        options:
+          - ''
+          - des
+          - pre
+          - prod
 
 jobs:
   build:
@@ -56,6 +66,7 @@ jobs:
     name: Deploy to DES
     runs-on: ubuntu-latest
     needs: build
+    if: github.event.inputs.deploy_to == 'des'
     
     steps:
       - name: Download build artifact
@@ -75,7 +86,7 @@ jobs:
     name: Deploy to PRE
     runs-on: ubuntu-latest
     needs: build
-    environment: pre
+    if: github.event.inputs.deploy_to == 'pre'
     
     steps:
       - name: Download build artifact
@@ -95,7 +106,7 @@ jobs:
     name: Deploy to PROD
     runs-on: ubuntu-latest
     needs: build
-    environment: prod
+    if: github.event.inputs.deploy_to == 'prod'
     
     steps:
       - name: Download build artifact
