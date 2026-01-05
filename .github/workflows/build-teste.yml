@@ -21,4 +21,4 @@ jobs:
         run: echo "version=${{ github.event.repository.name }}:${{ github.ref_name }}-${{ github.run_number }}" >> $GITHUB_OUTPUT
 
       - name: Exibir nome do artefato
-        run: echo "Nome do artefato é ${{ steps.teste.outputs.version }}"
+        run: echo "Nome do artefato é ${{ steps.teste.outputs.version }} da aplicação ${{ vars.APPLICATION }}"
