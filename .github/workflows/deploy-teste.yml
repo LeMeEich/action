@@ -1,0 +1,11 @@
+name: Build teste
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    uses: LeMeEich/.github/.github/workflows/deploy.yml@master

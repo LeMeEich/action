@@ -1,0 +1,15 @@
+name: 'Validate Branch'
+description: 'Valida se a execução está na branch master'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Validate branch
+      shell: bash
+      run: |
+        if [ "${{ github.ref_name }}" != "master" ]; then
+          echo "❌ Deploy só pode ser executado na branch master"
+          echo "Branch atual: ${{ github.ref_name }}"
+          exit 1
+        fi
+        echo "✅ Branch validada: master"
