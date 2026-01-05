@@ -28,7 +28,7 @@ jobs:
     needs: novo
     name: Teste job
     runs-on: ubuntu-latest
-    environment: dev
+    environment: des
     steps:
       - name: Exibir variável de ambiente
         run: echo "Nome da aplicação é ${{ needs.novo.outputs.application }} AMBIENTE ${{ vars.AMBIENTE }}"
