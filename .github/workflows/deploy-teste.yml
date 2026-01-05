@@ -18,7 +18,7 @@ on:
 
 jobs:
   deploy-teste:
-    uses: ./.github/workflows/deploy.yml
+    uses: LeMeEich/.github/.github/workflows/deploy.yml@master
     with:
       run_id: ${{ inputs.run_id }}
       environment: ${{ inputs.environment }}
