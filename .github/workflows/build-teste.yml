@@ -30,4 +30,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Exibir variável de ambiente
-        run: echo "Nome da aplicação é ${{ needs.novo.outputs.application }} AMBIENTE: ${{ vars.AMBIENTE }}"
+        run: echo "Nome da aplicação é ${{ needs.novo.outputs.application }} AMBIENTE ${{ vars.AMBIENTE }}"
