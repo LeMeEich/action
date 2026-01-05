@@ -17,4 +17,8 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Nome do Artefato
-        run: echo "${{ github.event.repository.name }}:${{ github.ref_name }}-${{ github.run_number }}"
+        id: teste
+        run: echo "version=${{ github.event.repository.name }}:${{ github.ref_name }}-${{ github.run_number }}" >> $GITHUB_OUTPUT
+
+      - name: Exibir nome do artefato
+        run: echo "Nome do artefato é ${{ steps.teste.outputs.version }}"
