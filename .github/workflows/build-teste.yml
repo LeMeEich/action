@@ -12,6 +12,8 @@ jobs:
   novo:
     name: Teste novo job
     runs-on: ubuntu-latest
+    outputs:
+      application: ${{ vars.APPLICATION }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -22,3 +24,10 @@ jobs:
 
       - name: Exibir nome do artefato
         run: echo "Nome do artefato é ${{ steps.teste.outputs.version }} da aplicação ${{ vars.APPLICATION }}"
+  teste:
+    needs: novo
+    name: Teste job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Exibir variável de ambiente
+        run: echo "Nome da aplicação é ${{ needs.novo.outputs.application }} AMBIENTE: ${{ vars.AMBIENTE }}"
