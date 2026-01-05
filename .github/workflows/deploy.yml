@@ -1,7 +1,7 @@
 name: Deploy
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       run_id:
         description: 'Run ID do build'
@@ -10,11 +10,7 @@ on:
       environment:
         description: 'Ambiente para deploy'
         required: true
-        type: choice
-        options:
-          - des
-          - pre
-          - prod
+        type: string
 
 jobs:
   deploy:
@@ -27,11 +23,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Validate Branch
-        uses: LeMeEich/.github/.github/actions/Deploy/validate-branch@master
+        uses: ./.github/.github/actions/Deploy/validate-branch@master
 
       - name: Get Build Information
         id: build_info
-        uses: LeMeEich/.github/.github/actions/Deploy/get-build-info@master
+        uses: ./.github/.github/actions/Deploy/get-build-info
         with:
           run_id: ${{ github.event.inputs.run_id }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -44,7 +40,7 @@ jobs:
           run-id: ${{ github.event.inputs.run_id }}
 
       - name: Deploy Application
-        uses: LeMeEich/.github/.github/actions/Deploy/script@master
+        uses: ./.github/.github/actions/Deploy/script
         with:
           environment: ${{ github.event.inputs.environment }}
 
