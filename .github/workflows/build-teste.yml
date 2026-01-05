@@ -16,11 +16,5 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Run a one-line script
-        run: echo "This is a new job in the workflow!"
-
-      - name: Print name branch
-        run: echo "Branch name is ${{ github.ref_name }}"
-
-      - name: Print number build
-        run: echo "Build number is ${{ github.run_number }}"
+      - name: Nome do Artefato
+        run: echo "${{ github.repository }}:${{ github.ref_name }}-${{ github.run_number }}"
