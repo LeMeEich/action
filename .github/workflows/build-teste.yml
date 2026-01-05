@@ -17,4 +17,4 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Nome do Artefato
-        run: $(echo "${{ github.repository }}cut -d'/' -f2) echo :${{ github.ref_name }}-${{ github.run_number }}"
+        run: echo "${{ github.event.repository.name }}:${{ github.ref_name }}-${{ github.run_number }}"
