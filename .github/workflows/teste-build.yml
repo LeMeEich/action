@@ -8,4 +8,4 @@ on:
 
 jobs:
   build-teste:
-    uses: LeMeEich/action/.github/workflows/build.yml@master
+    uses: LeMeEich/.github/.github/workflows/build.yml@master
