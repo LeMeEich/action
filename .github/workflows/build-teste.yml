@@ -3,7 +3,7 @@ name: Build teste
 on:
   push:
     branches:
-      - master
+      - novo
   workflow_dispatch:
 
 jobs:
